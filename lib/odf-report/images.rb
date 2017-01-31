@@ -34,7 +34,7 @@ module ODFReport
       nodes = content.xpath("//draw:frame[@draw:name]")
 
       nodes.each_with_index do |node, i|
-        node.attribute('name').value = "pic_#{i}"
+        node.attribute('name').value = "#{node.attribute('name').value}_#{i}"
       end
 
     end
