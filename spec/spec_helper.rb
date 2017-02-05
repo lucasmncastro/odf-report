@@ -4,7 +4,7 @@ require 'faker'
 I18n.enforce_available_locales = false
 
 class Item
-  attr_accessor :id, :name, :subs
+  attr_accessor :id, :name, :subs, :image
   def initialize(_id, _name, _subs=[])
     @name = _name
     @id   = _id
@@ -27,6 +27,7 @@ class Inspector
     @content = nil
     Zip::File.open(file) do |f|
       @content = f.get_entry('content.xml').get_input_stream.read
+      @manifest = f.get_entry('META-INF/manifest.xml').get_input_stream.read
     end
   end
 
@@ -36,6 +37,14 @@ class Inspector
 
   def text
     @text ||= xml.to_s
+  end
+
+  def manifest
+    @manifest
+  end
+
+  def manifest_xml
+    @xml_manifest ||= Nokogiri::XML(@manifest)
   end
 
 end

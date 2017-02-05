@@ -14,7 +14,13 @@ module ODFReport
       opts = {:name => name, :data_field => data_field}
       field = Text.new(opts, &block)
       @texts << field
+    end
 
+    def add_image(name, data_field=nil, &block)
+      opts = {:name => name, :data_field => data_field}
+      image = Image.new(opts, &block)
+      @images << image
+      Image.images << image
     end
 
     def add_table(table_name, collection_field, opts={})

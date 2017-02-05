@@ -1,7 +1,6 @@
 module ODFReport
 
 class Report
-  include Images
 
   def initialize(template_name, &block)
 
@@ -10,9 +9,8 @@ class Report
     @texts = []
     @fields = []
     @tables = []
-    @images = {}
-    @image_names_replacements = {}
     @sections = []
+    @images = []
 
     yield(self)
 
@@ -47,32 +45,36 @@ class Report
   end
 
   def add_image(name, path)
-    @images[name] = path
+    image = Image.new(name: name, value: path) 
+    @images << image
+    Image.images << image
   end
 
   def generate(dest = nil)
 
     @file.update_content do |file|
 
-      file.update_files('content.xml', 'styles.xml') do |txt|
-
+      file.update_files('content.xml', 'styles.xml', 'META-INF/manifest.xml') do |txt, entry_name|
         parse_document(txt) do |doc|
 
-          @sections.each { |s| s.replace!(doc) }
-          @tables.each   { |t| t.replace!(doc) }
+          if entry_name == 'content.xml'
+            @sections.each { |s| s.replace!(doc) }
+            @tables.each   { |t| t.replace!(doc) }
+            @texts.each    { |t| t.replace!(doc) }
+            @fields.each   { |f| f.replace!(doc) }
+            @images.each   { |i| i.replace!(doc) }
 
-          @texts.each    { |t| t.replace!(doc) }
-          @fields.each   { |f| f.replace!(doc) }
+            Image.avoid_duplicate_image_names(doc)
+          end
 
-          find_image_name_matches(doc)
-          avoid_duplicate_image_names(doc)
+          if entry_name == 'META-INF/manifest.xml'
+            Image.update_manifest(doc)
+          end
 
         end
-
       end
 
-      replace_images(file)
-
+      Image.write_images(file)
     end
 
     if dest

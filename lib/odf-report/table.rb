@@ -11,6 +11,7 @@ class Table
     @fields = []
     @texts = []
     @tables = []
+    @images = []
 
     @template_rows = []
     @header           = opts[:header] || false
@@ -42,6 +43,8 @@ class Table
       @texts.each     { |t| t.replace!(new_node, data_item) }
 
       @fields.each    { |f| f.replace!(new_node, data_item) }
+
+      @images.each    { |i| i.replace!(new_node, data_item) }
 
       table.add_child(new_node)
 

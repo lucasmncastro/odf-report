@@ -39,6 +39,7 @@ require 'launchy'
         t.add_column(:field_06, 'address')
         t.add_column(:field_07, :phone)
         t.add_column(:field_08, :zip)
+        t.add_image("image_table") { File.join(Dir.pwd, 'test', 'templates', 'ok.jpg') }
       end
 
       r.add_table("TABLE_03", @col3, :header=>true) do |t|
