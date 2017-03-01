@@ -65,6 +65,7 @@ class Report
             @images.each   { |i| i.replace!(doc) }
 
             Image.avoid_duplicate_image_names(doc)
+            Image.update_images_links(doc)
           end
 
           if entry_name == 'META-INF/manifest.xml'

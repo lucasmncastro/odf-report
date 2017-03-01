@@ -12,8 +12,17 @@ module ODFReport
       @path = get_value(data_item)
 
       if node = content.xpath(".//draw:frame[@draw:name='#{name}']/draw:image").first
-        node.set_attribute('xlink:href', zip_path)
+        if @path != ''
+          values[zip_path] = @path
+          node.set_attribute('xlink:href', zip_path)
+        else
+          content.xpath(".//draw:frame[@draw:name='#{name}']").remove
+        end
       end
+    end
+
+    def values
+      @values ||= {}
     end
 
     def path
@@ -32,10 +41,6 @@ module ODFReport
     class << self
       def images
         @@images ||= []
-      end
-
-      def add_image(name, path)
-        images << Image.new(name: name, path: path)
       end
 
       def update_images_links(content)
@@ -59,16 +64,19 @@ module ODFReport
         return if images.empty?
 
         images.each do |image|
-          file.output_stream.put_next_entry(image.zip_path)
-          file.output_stream.write ::File.read(image.path)
+          image.values.each do |entry, path|
+            file.output_stream.put_next_entry(entry)
+            file.output_stream.write ::File.read(path)
+          end
         end
       end # replace_images
 
       def update_manifest(doc)
         images.each do |image|
-          path      = image.zip_path
-          extension = image.extension
-          doc.root.add_child %{<manifest:file-entry manifest:full-path="#{path}" manifest:media-type="image/#{extension}"/>}
+          image.values.each do |entry, path|
+            extension = entry.split('.').last
+            doc.root.add_child %{<manifest:file-entry manifest:full-path="#{entry}" manifest:media-type="image/#{extension}"/>}
+          end
         end
       end
     end

@@ -85,8 +85,83 @@ RSpec.describe "Images" do
 
   context "section image replacement" do
     it "should works" do
+      report = ODFReport::Report.new("spec/specs.odt") do |r|
+
+        r.add_image(:image_01, @image_01)
+
+        r.add_table('TABLE_01', @itens_01) do |t|
+          t.add_column(:column_01, :id)
+          t.add_column(:column_02, :name)
+          t.add_image(:image_02) { |i| i.image }
+        end
+
+        r.add_section('SECTION_01', @itens_01) do |t|
+          t.add_field(:s01_field_01, :id)
+          t.add_field(:s01_field_02, :name)
+          t.add_image(:image_03, :image)
+        end
+
+      end
+      report.generate("spec/result/specs.odt")
+      @data = Inspector.new("spec/result/specs.odt")
+
       image = @data.xml.xpath("//draw:frame[@draw:name='image_03_4']/draw:image").first
       expect(image.attr('xlink:href')).to eq(File.join('Pictures', File.basename(@image_01)))
+    end
+
+    it "should removes the element when the field is nil" do
+      report = ODFReport::Report.new("spec/specs.odt") do |r|
+        r.add_image(:image_01, nil)
+      end
+      report.generate("spec/result/specs.odt")
+
+      @data = Inspector.new("spec/result/specs.odt")
+      image = @data.xml.xpath("//draw:frame[@draw:name='image_01_0']").first
+      expect(image).to be_nil
+    end
+
+    it "should removes the element when the field inside a table is nil" do
+      @itens_01[1].image = nil
+
+      report = ODFReport::Report.new("spec/specs.odt") do |r|
+        r.add_table('TABLE_01', @itens_01) do |t|
+          t.add_column(:column_01, :id)
+          t.add_column(:column_02, :name)
+          t.add_image(:image_02) { |i| i.image }
+        end
+      end
+      report.generate("spec/result/specs.odt")
+
+      @data = Inspector.new("spec/result/specs.odt")
+      expect(@data.xml.xpath("//draw:frame[@draw:name='image_02_1']").first).to be_truthy
+      expect(@data.xml.xpath("//draw:frame[@draw:name='image_02_2']").first).to be_truthy
+      expect(@data.xml.xpath("//draw:frame[@draw:name='image_02_3']").first).to be_nil
+    end
+
+    it "should removes the element when the field inside a section is nil" do
+      @itens_01[1].image = nil
+
+      report = ODFReport::Report.new("spec/specs.odt") do |r|
+        r.add_image(:image_01, @image_01)
+
+        r.add_table('TABLE_01', @itens_01) do |t|
+          t.add_column(:column_01, :id)
+          t.add_column(:column_02, :name)
+          t.add_image(:image_02) { |i| i.image }
+        end
+
+        r.add_section('SECTION_01', @itens_01) do |t|
+          t.add_field(:s01_field_01, :id)
+          t.add_field(:s01_field_02, :name)
+          t.add_image(:image_03, :image)
+        end
+      end
+      report.generate("spec/result/specs.odt")
+
+      @data = Inspector.new("spec/result/specs.odt")
+      expect(@data.xml.xpath("//draw:frame[@draw:name='image_03_3']").first).to be_truthy
+      expect(@data.xml.xpath("//draw:frame[@draw:name='image_03_4']").first).to be_truthy
+      expect(@data.xml.xpath("//draw:frame[@draw:name='image_03_5']").first).to be_nil
     end
   end
 
